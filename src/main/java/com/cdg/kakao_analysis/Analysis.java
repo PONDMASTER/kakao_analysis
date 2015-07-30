@@ -4,18 +4,27 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 public class Analysis {
 	
 	String filePath;
 	ArrayList<String> fileData;
+	TreeMap<String, Integer> timeTreeMap;
+	TreeMap<String, TreeMap<String, Integer>> userTreeMap;
 	
 	Analysis(String filePath){
 		this.filePath = filePath;
 		fileData = new ArrayList<String>();
 	}
 	
-	//fileÀÇ ³»¿ëÀ» ºÒ·¯¿Í ¹®ÀÚ¿­ Data¸¦ º¸°ü
+	//fileì˜ ë‚´ìš©ì„ ë¶ˆëŸ¬ì™€ ë¬¸ìì—´ Dataë¥¼ ë³´ê´€
 	public boolean readFile(){
 		boolean result = true;
 		
@@ -23,8 +32,8 @@ public class Analysis {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF8"));
 			String strTemp;
 			while((strTemp=reader.readLine()) != null){
-				System.out.println(strTemp);
-				// ºóÁÙÀº Á¦°Å
+				//System.out.println(strTemp);
+				// ë¹ˆì¤„ì€ ì œê±°
 				if(!strTemp.equals("")){
 					fileData.add(strTemp);
 				}
@@ -38,16 +47,121 @@ public class Analysis {
 		return result;
 	}
 	
-	//º¸°üÁßÀÎ ¹®ÀÚ¿­ Data¸¦ ºĞ¼®
+	//ë³´ê´€ì¤‘ì¸ ë¬¸ìì—´ Dataë¥¼ ë¶„ì„
 	public void analysisData(){
+		int timeStart = 0;
+		int timeEnd = 0;
+		int userStart = 0;
+		int talkCheck = 0;
+		String userTalk;
+		String[] userTalkWord;
+		
+		timeTreeMap = new TreeMap<String, Integer>();
+		userTreeMap = new TreeMap<String, TreeMap<String, Integer>>();
+				
+		for(String str : fileData){
+			
+			//ì‹œê°„ëŒ€ ë¶„ì„
+			if((timeStart = str.indexOf("ì˜¤ì „")) == -1){
+				timeStart = str.indexOf("ì˜¤í›„");
+			}
+			timeEnd = str.indexOf(":", timeStart);
+			if(timeStart > 0 && timeEnd > timeStart){
+				if(timeTreeMap.containsKey(str.substring(timeStart, timeEnd))){
+					Integer value = (Integer)timeTreeMap.get(str.substring(timeStart, timeEnd));
+					timeTreeMap.put(str.substring(timeStart, timeEnd), new Integer(value.intValue() + 1));				
+				}else{
+					timeTreeMap.put(str.substring(timeStart, timeEnd), new Integer(1));
+				}
+				
+				//ì‚¬ìš©ì ì‚¬ìš© ë‹¨ì–´ ë¶„ì„
+				userStart = str.indexOf(",", timeEnd);
+				talkCheck = str.indexOf(":", userStart);
+				if(userStart > timeEnd && talkCheck > userStart){
+					userTalkWord = str.substring(userStart + 2).split(" ");
+					if(!userTreeMap.containsKey(userTalkWord[0])){
+						userTreeMap.put(userTalkWord[0], new TreeMap<String, Integer>());
+					}
+					TreeMap<String, Integer> treeMapTemp = userTreeMap.get(userTalkWord[0]);
+					for(int i = 2; i < userTalkWord.length; i++){
+						if(treeMapTemp.containsKey(userTalkWord[i])){
+							Integer value = (Integer)treeMapTemp.get(userTalkWord[i]);
+							treeMapTemp.put(userTalkWord[i], new Integer(value.intValue() + 1));
+						}else{
+							treeMapTemp.put(userTalkWord[i], new Integer(1));
+						}
+					}
+				}
+				
+			}
+			
+		}
 		
 	}
 	
-	//ºĞ¼® ³»¿ëÀ» Ãâ·Â
-	public void resultView(){
-		for(String str : fileData){
-			System.out.println(str);
+	static class ValueComparator implements Comparator {
+
+		public int compare(Object o1, Object o2){
+			if(o1 instanceof Map.Entry && o2 instanceof Map.Entry){
+				Map.Entry e1 = (Map.Entry)o1;
+				Map.Entry e2 = (Map.Entry)o2;
+				
+				int v1 = ((Integer)e1.getValue()).intValue();
+				int v2 = ((Integer)e2.getValue()).intValue();
+				
+				return v2 - v1;
+			}
+			return -1;
 		}
+	}
+	
+	//ë¶„ì„ ë‚´ìš©ì„ ì¶œë ¥
+	public void resultView(){
+
+		int viewTop = 5;
+		
+		// ì‹œê°„ëŒ€ ì¶œë ¥
+		Set setTime = timeTreeMap.entrySet();
+		List listTime = new ArrayList(setTime);
+		Collections.sort(listTime, new ValueComparator());
+		Iterator itTime = listTime.iterator();
+		
+		System.out.println("==ê°€ì¥ë§ì´ ëŒ€í™”í•˜ëŠ” ì‹œê°„ëŒ€==");
+		for(int i = 0; i < viewTop; i++){
+			if(itTime.hasNext()){
+				Map.Entry entry = (Map.Entry)itTime.next();
+				int value = ((Integer)entry.getValue()).intValue();
+				System.out.println((i + 1) + ". " + entry.getKey() + "ì‹œ(" + value + "íšŒ)");
+			}
+		}
+		
+		// ìœ ì €ë³„ ì¶œë ¥
+		Iterator itUser = userTreeMap.entrySet().iterator();
+		
+		while(itUser.hasNext()){
+			Map.Entry entry = (Map.Entry)itUser.next();
+			System.out.println("");
+			System.out.println(entry.getKey() + " ë‹˜ì´ ìì£¼ ì‚¬ìš©í•˜ëŠ” ë‹¨ì–´");
+			
+			TreeMap<String, Integer> treeMapTemp = userTreeMap.get(entry.getKey());
+			Set setWord = treeMapTemp.entrySet();
+			List listWord = new ArrayList(setWord);
+			Collections.sort(listWord, new ValueComparator());
+			Iterator itWord = listWord.iterator();
+			
+			for(int i = 0; i < viewTop; i++){
+				if(itWord.hasNext()){
+					Map.Entry entryWord = (Map.Entry)itWord.next();
+					int value = ((Integer)entryWord.getValue()).intValue();
+					System.out.println((i + 1) + ". " + entryWord.getKey() + "(" + value + "íšŒ)");
+				}
+			}
+			
+		}		
+		
+		/*for(String str : fileData){
+			System.out.println(timeTreeMap);
+		}*/
 	}
 
 }

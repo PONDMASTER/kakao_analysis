@@ -12,15 +12,16 @@ public class App
     {
     	Scanner scan = new Scanner(System.in);
     	String filePath = "";
-        System.out.print("ºĞ¼®ÇÒ ÆÄÀÏÀÇ °æ·Î¿Í ÆÄÀÏ¸íÀ» ÀÔ·ÂÇÏ¼¼¿ä : ");
+        System.out.print("ë¶„ì„í•  íŒŒì¼ì˜ ê²½ë¡œì™€ íŒŒì¼ëª…ì„ ì…ë ¥í•˜ì„¸ìš” : ");
         filePath = scan.nextLine();
         
         Analysis kakaoAnalysis = new Analysis(filePath);
         
         if(kakaoAnalysis.readFile()){
+        	kakaoAnalysis.analysisData();
         	kakaoAnalysis.resultView();
         }else{
-        	System.out.println("ÆÄÀÏÀ» ÀĞ¾î¿À´Âµ¥ ½ÇÆĞÇß½À´Ï´Ù.");
+        	System.out.println("íŒŒì¼ì„ ì½ì–´ì˜¤ëŠ”ë° ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.");
         }
         
     }
