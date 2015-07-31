@@ -159,9 +159,6 @@ public class Analysis {
 			
 		}		
 		
-		/*for(String str : fileData){
-			System.out.println(timeTreeMap);
-		}*/
 	}
 
 }
